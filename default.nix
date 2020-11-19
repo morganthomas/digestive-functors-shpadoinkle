@@ -1,5 +1,5 @@
 { chan ? "e1843646b04fb564abf6330a9432a76df3269d2f"
-, compiler ? "ghc864"
+, compiler ? "ghc865"
 , withHoogle ? false
 , doHoogle ? false
 , doHaddock ? false
@@ -15,7 +15,7 @@ let
   # It's a shpadoinkle day
   shpadoinkle = builtins.fetchGit {
     url    = https://gitlab.com/fresheyeball/Shpadoinkle.git;
-    rev    = "0b7d9fa744fc6a9be4a1ff1fc834c39ff9eae1f2";
+    rev    = "3699b79016d60ee825ca906f58dafdf895b6682a";
     ref    = "master";
   };
 

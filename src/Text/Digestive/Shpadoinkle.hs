@@ -19,19 +19,23 @@ module Text.Digestive.Shpadoinkle
   , childErrorList
   ) where
 
-import Data.Maybe (maybeToList)
-import Data.Text
-import Text.Digestive.View
-import Shpadoinkle
-import Shpadoinkle.Html as Html
+import           Data.Maybe          (maybeToList)
+import           Data.Text           (Text, pack)
+import           Shpadoinkle         (Html, Prop, flagProp, text, textProp)
+import           Shpadoinkle.Html    as Html (br_, className, form, id', input',
+                                              label, li, optgroup, option,
+                                              select, textarea, ul, value)
+import           Text.Digestive.View (View, absoluteRef, childErrors, errors,
+                                      fieldInputBool, fieldInputChoice,
+                                      fieldInputChoiceGroup, fieldInputText,
+                                      viewEncType)
 
 
-inputText :: IsHtml h p => IsProp p e => Text -> View v -> h a
+inputText :: Text -> View v -> Html m a
 inputText = inputWithType "text" []
 
 
-inputTextArea :: IsHtml h p => IsProp p e
-              => Maybe Int -> Maybe Int -> Text -> View (h a) -> h a
+inputTextArea :: Maybe Int -> Maybe Int -> Text -> View (Html m a) -> Html m a
 inputTextArea r c ref view =
   textarea ( [ ("id", textProp ref'), ("name", textProp ref') ]
            <> maybeToList (rows' <$> r)
@@ -43,15 +47,15 @@ inputTextArea r c ref view =
     cols' x = ("cols",) . textProp . pack $ show x
 
 
-inputPassword :: IsHtml h p => IsProp p e => Text -> View v -> h a
+inputPassword :: Text -> View v -> Html m a
 inputPassword = inputWithType "password" []
 
 
-inputHidden :: IsHtml h p => IsProp p e => Text -> View v -> h a
+inputHidden :: Text -> View v -> Html m a
 inputHidden = inputWithType "hidden" []
 
 
-inputSelect :: IsHtml h p => IsProp p e => Text -> View (h a) -> h a
+inputSelect :: Text -> View (Html m a) -> Html m a
 inputSelect ref view =
   select [ ("id", textProp ref'), ("name", textProp ref') ]
     (choiceEl <$> choices)
@@ -61,7 +65,7 @@ inputSelect ref view =
         choices = mconcat $ snd <$> fieldInputChoiceGroup ref view
 
 
-inputSelectGroup :: IsHtml h p => IsProp p e => Text -> View (h a) -> h a
+inputSelectGroup :: Text -> View (Html m a) -> Html m a
 inputSelectGroup ref view = select [ ("id", textProp ref'), ("name", textProp ref') ]
                               (groupEl <$> groups)
   where ref' = absoluteRef ref view
@@ -71,7 +75,7 @@ inputSelectGroup ref view = select [ ("id", textProp ref'), ("name", textProp re
         choiceEl (i, c, sel) = option [ valueProp i, ("selected", flagProp sel) ] [ c ]
 
 
-inputWithType :: IsHtml h p => IsProp p e => Text -> [(Text, p a)] -> Text -> View v -> h a
+inputWithType :: Text -> [(Text, Prop m a)] -> Text -> View v -> Html m a
 inputWithType ty additionalAttrs ref view = input' attrs
   where
     ref' = absoluteRef ref view
@@ -83,7 +87,7 @@ inputWithType ty additionalAttrs ref view = input' attrs
       , value $ fieldInputText ref view ]
 
 
-inputRadio :: IsHtml h p => IsProp p e => Bool -> Text -> View (h a) -> [h a]
+inputRadio :: Bool -> Text -> View (Html m a) -> [Html m a]
 inputRadio addLineBreaks ref view = mconcat $ choiceEls <$> choices
   where choices = fieldInputChoice ref view
         ref' = absoluteRef ref view
@@ -91,37 +95,37 @@ inputRadio addLineBreaks ref view = mconcat $ choiceEls <$> choices
         choiceEls (i, c, sel) =
           [ input' [("type", textProp "radio"), ("value", valueProp i), ("checked", flagProp sel)]
           , Html.label [("for", valueProp i)] [ c ] ]
-          <> (if addLineBreaks then [br_ []] else [])
+          <> ([br_ [] | addLineBreaks])
 
-inputCheckbox :: IsHtml h p => IsProp p e => Text -> View (h a) -> h a
+inputCheckbox :: Text -> View (Html m a) -> Html m a
 inputCheckbox ref view =
   input' [ ("type", textProp "checkbox"), ("id", textProp ref'), ("name", textProp ref'), ("checked", flagProp selected) ]
   where ref'     = absoluteRef ref view
         selected = fieldInputBool ref view
 
-inputFile :: IsHtml h p => IsProp p e => Text -> View v -> h a
+inputFile :: Text -> View v -> Html m a
 inputFile ref view = input' [ ("type", textProp "file"), ("id", textProp ref'), ("name", textProp ref') ]
   where ref' = absoluteRef ref view
 
-inputSubmit :: IsHtml h p => IsProp p e => Text -> h a
+inputSubmit :: Text -> Html m a
 inputSubmit v = input' [("type", textProp "submit"), ("value", textProp v)]
 
-label :: IsHtml h p => IsProp p e => Text -> View v -> [h a] -> h a
+label :: Text -> View v -> [Html m a] -> Html m a
 label ref view = Html.label [ ("for", textProp ref') ]
   where ref' = absoluteRef ref view
 
-form :: IsHtml h p => IsProp p e => View (h a) -> Text -> [h a] -> h a
+form :: View (Html m a) -> Text -> [Html m a] -> Html m a
 form view action = Html.form [ ("method", textProp "POST")
                              , ("enctype", textProp (pack . show $ viewEncType view))
                              , ("action", textProp action) ]
 
-errorList :: IsHtml h p => IsProp p e => Text -> View (h a) -> [h a]
+errorList :: Text -> View (Html m a) -> [Html m a]
 errorList ref view = case errors ref view of
   []   -> []
   errs -> [ ul [ className "digestive-functors-error-list" ] $ errEl <$> errs ]
   where errEl e = li [ className "digestive-functors-error" ] [ e ]
 
-childErrorList :: IsHtml h p => IsProp p e => Text -> View (h a) -> [h a]
+childErrorList :: Text -> View (Html m a) -> [Html m a]
 childErrorList ref view = case childErrors ref view of
   [] -> []
   errs -> [ ul [ className "digestive-functors-error-list" ] $ errEl <$> errs ]
