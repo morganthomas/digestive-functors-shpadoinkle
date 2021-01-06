@@ -1,4 +1,4 @@
-{ chan ? "e1843646b04fb564abf6330a9432a76df3269d2f"
+{ chan ? "5272327b81ed355bbed5659b8d303cf2979b6953"
 , compiler ? "ghc865"
 , withHoogle ? false
 , doHoogle ? false
@@ -15,7 +15,7 @@ let
   # It's a shpadoinkle day
   shpadoinkle = builtins.fetchGit {
     url    = https://gitlab.com/fresheyeball/Shpadoinkle.git;
-    rev    = "3699b79016d60ee825ca906f58dafdf895b6682a";
+    rev    = "90735e2a9e3edd2a73d34dd8619de310274fac4b";
     ref    = "master";
   };
 
@@ -31,7 +31,7 @@ let
 
 
   # Get some utilities
-  inherit (import (shpadoinkle + "/nix/util.nix") { inherit compiler isJS; }) compilerjs gitignore;
+  inherit (import (shpadoinkle + "/nix/util.nix") { inherit compiler pkgs isJS; }) compilerjs gitignore;
 
 
   # Build faster by doing less
@@ -45,11 +45,11 @@ let
   # Overlay containing Shpadoinkle packages, and needed alterations for those packages
   # as well as optimizations from Reflex Platform
   shpadoinkle-overlay =
-    import (shpadoinkle + "/nix/overlay.nix") { inherit compiler isJS; };
+    import (shpadoinkle + "/nix/overlay.nix") { inherit chan compiler isJS; };
 
 
   # Haskell specific overlay (for you to extend)
-  haskell-overlay = hself: hsuper: { 
+  haskell-overlay = hself: hsuper: {
     "happy" = pkgs.haskell.lib.dontCheck hsuper.happy;
   };
 
